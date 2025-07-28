@@ -1,43 +1,36 @@
 <?php
 /**
- * db_connection.php
+ * Conexión a la Base de Datos con PDO
  *
- * Archivo encargado de establecer la conexión segura a la base de datos MySQL.
- * Utiliza la extensión MySQLi para una conexión orientada a objetos.
- * Incluye configuración de zona horaria PHP y buffering de salida para limpieza.
- *
- * @package EssaludSicuaniWeb
- * @subpackage Includes
- * @author Yudelvis Caceres
- * @version 1.0.2 // Añadido ob_start() y ob_end_clean() para manejar posibles caracteres BOM/salida no deseada.
- * @date 2025-07-27
+ * Este script establece una conexión segura a la base de datos utilizando PDO,
+ * que previene inyecciones SQL mediante el uso de sentencias preparadas.
  */
 
-// Iniciar el buffering de salida para capturar cualquier caracter antes de la etiqueta PHP o después de ella en includes.
-ob_start();
+// 1. Incluir el archivo de configuración
+// require_once se asegura de que el archivo se incluya una sola vez y detiene el script si no lo encuentra.
+require_once 'config.php';
 
-// Definición de la zona horaria para PHP
-date_default_timezone_set('America/Lima');
+// 2. Definir el DSN (Data Source Name)
+// El DSN le dice a PDO a qué driver conectarse y la información de la conexión.
+$dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
 
+// 3. Configurar las opciones de PDO
+$options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, // Lanza excepciones en caso de error, lo que permite un mejor manejo.
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,       // Devuelve los resultados como un array asociativo.
+    PDO::ATTR_EMULATE_PREPARES   => false,                  // Desactiva la emulación de sentencias preparadas para usar las nativas del motor de BD.
+];
 
-// Definición de constantes para los parámetros de conexión a la base de datos
-define('DB_HOST', 'localhost');
-define('DB_USER', 'essaluds_essaluds');
-define('DB_PASS', 'Ycr82061714622*');
-define('DB_NAME', 'essaluds_sicuani_db');
-
-// Intentar establecer la conexión a la base de datos
-$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-
-// Verificar si la conexión fue exitosa
-if ($conn->connect_error) {
-    die("Error de conexión a la base de datos: " . $conn->connect_error);
+// 4. Crear la instancia de PDO (la conexión)
+try {
+    // Intentamos crear la conexión
+    $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+} catch (PDOException $e) {
+    // Si la conexión falla, se captura la excepción y se muestra un mensaje de error genérico.
+    // En un entorno de producción, podrías registrar este error en un archivo en lugar de mostrarlo.
+    // La directiva 'die()' detiene la ejecución del script por completo.
+    die("Error: No se pudo conectar a la base de datos. Por favor, contacte al administrador.");
 }
 
-// Establecer el conjunto de caracteres a UTF-8
-$conn->set_charset("utf8mb4");
-
-// Finalizar y limpiar el buffer de salida si hay algo.
-ob_end_clean();
-
+// La variable $pdo ahora está disponible para ser usada en cualquier script que incluya este archivo.
 ?>
